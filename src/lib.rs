@@ -79,10 +79,12 @@ RUSTFLAGS="--cfg portable_atomic_unstable_coerce_unsized" cargo ...
 #![no_std]
 #![doc(test(
     no_crate_inject,
-    attr(
-        deny(warnings, rust_2018_idioms, single_use_lifetimes),
-        allow(dead_code, unused_variables)
-    )
+    attr(allow(
+        dead_code,
+        unused_variables,
+        clippy::undocumented_unsafe_blocks,
+        clippy::unused_trait_names,
+    ))
 ))]
 #![cfg_attr(not(portable_atomic_no_unsafe_op_in_unsafe_fn), warn(unsafe_op_in_unsafe_fn))] // unsafe_op_in_unsafe_fn requires Rust 1.52
 #![cfg_attr(portable_atomic_no_unsafe_op_in_unsafe_fn, allow(unused_unsafe))]

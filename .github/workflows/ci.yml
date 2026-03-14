@@ -50,8 +50,6 @@ jobs:
       pull-requests: write # unused (used in `codegen-automerge: true` case)
       security-events: write # for github/codeql-action/*
     secrets: inherit
-    with:
-      clippy-doctest: false
 
   build:
     strategy:

@@ -549,7 +549,7 @@ impl<T> Arc<T> {
     ///
     /// // Create a long list and clone it
     /// let mut x = LinkedList::new();
-    /// let size = 100000;
+    /// let size = 100_000;
     /// # let size = if cfg!(miri) { 100 } else { size };
     /// for i in 0..size {
     ///     x.push(i); // Adds i to the front of x
@@ -2097,7 +2097,7 @@ impl<T> Default for Weak<T> {
     /// ```
     /// use portable_atomic_util::Weak;
     ///
-    /// let empty: Weak<i64> = Default::default();
+    /// let empty: Weak<i64> = Weak::default();
     /// assert!(empty.upgrade().is_none());
     /// ```
     fn default() -> Self {
@@ -2332,7 +2332,7 @@ impl<T: Default> Default for Arc<T> {
     /// ```
     /// use portable_atomic_util::Arc;
     ///
-    /// let x: Arc<i32> = Default::default();
+    /// let x: Arc<i32> = Arc::default();
     /// assert_eq!(*x, 0);
     /// ```
     fn default() -> Self {
