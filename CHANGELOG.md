@@ -12,6 +12,8 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+portable-atomic-util has been extracted from the portable-atomic repository into its own repository.
+
 ## [0.2.5] - 2026-01-31
 
 - Add `Arc::{new_zeroed,new_zeroed_slice}` at Rust 1.36+. (align to the [std `Arc` change in Rust 1.92](https://github.com/rust-lang/rust/pull/144091)) ([f8affb6](https://github.com/taiki-e/portable-atomic/commit/f8affb661abb1ac928cd78a66bf8fe1e72c42e42), [ae5aba7](https://github.com/taiki-e/portable-atomic/commit/ae5aba7cbe182b5d83b4b4973ccdaab372bef4d6))

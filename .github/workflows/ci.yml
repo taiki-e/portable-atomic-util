@@ -1,0 +1,135 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUST_TEST_THREADS: 1
+  RUSTDOCFLAGS: -D warnings
+  RUSTFLAGS: -D warnings
+  RUSTUP_MAX_RETRIES: 10
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -CeEuxo pipefail {0}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  miri:
+    uses: taiki-e/github-actions/.github/workflows/miri.yml@main
+  msrv:
+    uses: taiki-e/github-actions/.github/workflows/msrv.yml@main
+  test:
+    uses: taiki-e/github-actions/.github/workflows/test.yml@main
+    with:
+      target: x86_64-unknown-linux-gnu,aarch64-apple-darwin,x86_64-pc-windows-msvc,aarch64-unknown-linux-gnu,armv5te-unknown-linux-gnueabi,i686-unknown-linux-gnu,s390x-unknown-linux-gnu
+      test-fat-lto: true
+      no-std: false # covered by tools/build.sh
+  tidy:
+    uses: taiki-e/github-actions/.github/workflows/tidy.yml@main
+    permissions:
+      contents: write # for creating branch for pr
+      pull-requests: write # unused (used in `codegen-automerge: true` case)
+      security-events: write # for github/codeql-action/*
+    secrets: inherit
+    with:
+      clippy-doctest: false
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rust: stable
+          - rust: beta
+          - rust: nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: taiki-e/checkout-action@v1
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          toolchain: ${{ matrix.rust }}
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack
+          fallback: none
+      - run: tools/build.sh
+        env:
+          ALL_TARGETS_MUST_BE_AVAILABLE: ${{ matrix.rust == 'nightly' || '' }}
+
+  san:
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer:
+          - address
+          - memory
+          - thread
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: taiki-e/checkout-action@v1
+      - uses: taiki-e/github-actions/install-rust@nightly
+        with:
+          component: rust-src
+      - run: |
+          printf 'ASAN_OPTIONS=detect_stack_use_after_return=1\n' >>"${GITHUB_ENV}"
+          printf '%s\n' "RUSTFLAGS=${RUSTFLAGS} -Z sanitizer=address" >>"${GITHUB_ENV}"
+          printf '%s\n' "RUSTDOCFLAGS=${RUSTDOCFLAGS} -Z sanitizer=address" >>"${GITHUB_ENV}"
+        if: matrix.sanitizer == 'address'
+      - run: |
+          printf 'MSAN_OPTIONS=verbosity=2\n' >>"${GITHUB_ENV}"
+          printf '%s\n' "RUSTFLAGS=${RUSTFLAGS} -Z sanitizer=memory -Z sanitizer-memory-track-origins" >>"${GITHUB_ENV}"
+          printf '%s\n' "RUSTDOCFLAGS=${RUSTDOCFLAGS} -Z sanitizer=memory -Z sanitizer-memory-track-origins" >>"${GITHUB_ENV}"
+        if: matrix.sanitizer == 'memory'
+      - run: |
+          printf '%s\n' "RUSTFLAGS=${RUSTFLAGS} -Z sanitizer=thread" >>"${GITHUB_ENV}"
+          printf '%s\n' "RUSTDOCFLAGS=${RUSTDOCFLAGS} -Z sanitizer=thread" >>"${GITHUB_ENV}"
+        if: matrix.sanitizer == 'thread'
+      - run: |
+          cargo -Z build-std test --workspace --target "$(rustc -vV | grep -E '^host:' | cut -d' ' -f2)"
+      - run: |
+          cargo -Z build-std test --workspace --release --target "$(rustc -vV | grep -E '^host:' | cut -d' ' -f2)"
+      - run: |
+          cargo -Z build-std test --workspace --release --target "$(rustc -vV | grep -E '^host:' | cut -d' ' -f2)"
+        env:
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+          CARGO_PROFILE_RELEASE_LTO: fat
+        # TODO: asan and msan are broken with fat LTO since nightly-2025-02-01.
+        if: matrix.sanitizer == 'thread'
+
+  valgrind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: taiki-e/checkout-action@v1
+      - uses: taiki-e/github-actions/install-rust@nightly
+      - uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: host-tuple
+          runner: valgrind
+      - run: cargo test -v --workspace
+      - run: cargo test -v --workspace --release
+      - run: cargo test -v --workspace --release
+        env:
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+          CARGO_PROFILE_RELEASE_LTO: fat

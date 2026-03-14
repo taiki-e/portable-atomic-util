@@ -4,7 +4,7 @@
 [![docs.rs](https://img.shields.io/badge/docs.rs-portable--atomic--util-blue?style=flat-square&logo=docs.rs)](https://docs.rs/portable-atomic-util)
 [![license](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue?style=flat-square)](#license)
 [![msrv](https://img.shields.io/badge/msrv-1.34-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
-[![github actions](https://img.shields.io/github/actions/workflow/status/taiki-e/portable-atomic/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/taiki-e/portable-atomic/actions)
+[![github actions](https://img.shields.io/github/actions/workflow/status/taiki-e/portable-atomic-util/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/taiki-e/portable-atomic-util/actions)
 
 <!-- tidy:sync-markdown-to-rustdoc:start:src/lib.rs -->
 
@@ -14,7 +14,9 @@ Synchronization primitives built with [portable-atomic].
 - Provide `task::Wake`. (optional, requires the `std` or `alloc` feature)
 <!-- - Provide generic `Atomic<T>` type. (optional, requires the `generic` feature) -->
 
-See [#1] for other primitives being considered for addition to this crate.
+See [portable-atomic#1] for other primitives being considered for addition to this crate.
+
+This crate was originally [part of the portable-atomic repository](https://github.com/taiki-e/portable-atomic/tree/cbbee0c0d202a5944f7d66aaafaac6ed76e6f599/portable-atomic-util) and was extracted into its own repository.
 
 ## Optional features
 
@@ -36,7 +38,7 @@ See [#1] for other primitives being considered for addition to this crate.
 -->
 
 [portable-atomic]: https://github.com/taiki-e/portable-atomic
-[#1]: https://github.com/taiki-e/portable-atomic/issues/1
+[portable-atomic#1]: https://github.com/taiki-e/portable-atomic/issues/1
 
 ## Optional cfg
 
@@ -64,6 +66,15 @@ RUSTFLAGS="--cfg portable_atomic_unstable_coerce_unsized" cargo ...
   See [this issue comment](https://github.com/taiki-e/portable-atomic/issues/143#issuecomment-1866488569) for another known workaround.
 
   **Note:** This cfg is unstable and outside of the normal semver guarantees and minor or patch versions of portable-atomic-util may make breaking changes to them at any time.
+
+## Related Projects
+
+- [portable-atomic]: Portable atomic types including support for 128-bit atomics, atomic float, etc.
+- [atomic-maybe-uninit]: Atomic operations on potentially uninitialized integers.
+- [atomic-memcpy]: Byte-wise atomic memcpy.
+
+[atomic-maybe-uninit]: https://github.com/taiki-e/atomic-maybe-uninit
+[atomic-memcpy]: https://github.com/taiki-e/atomic-memcpy
 
 <!-- tidy:sync-markdown-to-rustdoc:end -->
 

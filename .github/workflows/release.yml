@@ -1,0 +1,31 @@
+name: Release
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to be increased
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -CeEuxo pipefail {0}
+
+jobs:
+  release:
+    if: github.repository_owner == 'taiki-e'
+    uses: taiki-e/github-actions/.github/workflows/rust-release.yml@main
+    permissions:
+      contents: write # for taiki-e/create-gh-release-action
+      id-token: write # for rust-lang/crates-io-auth-action
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
