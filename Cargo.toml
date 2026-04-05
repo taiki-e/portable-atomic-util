@@ -40,19 +40,13 @@ std = ["alloc"]
 # - The MSRV when this feature is enabled and the `std` feature is *not* enabled is Rust 1.36 that `alloc` crate stabilized.
 alloc = []
 
-# Implement serde::{Serialize, Deserialize} for Arc.
-#
-# Note:
-# - The MSRV when this feature is enabled is the one coming from serde, as of now it's Rust 1.56
-serde = ["dep:serde"]
-
 # TODO: https://github.com/taiki-e/portable-atomic/issues/1
 # # Provides generic `atomic<t>` type.
 # generic = []
 
 [dependencies]
 portable-atomic = { version = "1.5.1", default-features = false, features = ["require-cas"] }
-serde = { version = "1.0.228", default-features = false, features = ["derive"], optional = true }
+serde = { version = "1.0.60", default-features = false, optional = true }
 
 [dev-dependencies]
 build-context = "0.1"
