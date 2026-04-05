@@ -32,6 +32,12 @@ This crate was originally [part of the portable-atomic repository](https://githu
   Note:
   - The MSRV when this feature is enabled and the `std` feature is *not* enabled is Rust 1.36 that `alloc` crate stabilized.
 
+- **`serde`**<br>
+  Implement `serde::{Serialize, Deserialize}` for `Arc`.
+
+  Note:
+  - The MSRV when this feature is enabled is the one coming from serde, as of now it's Rust 1.56
+
 <!-- TODO: https://github.com/taiki-e/portable-atomic/issues/1
 - **`generic`**<br>
   Provides generic `Atomic<T>` type.
