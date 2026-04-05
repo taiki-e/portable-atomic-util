@@ -2805,6 +2805,34 @@ impl<T: ?Sized + error::Error> error::Error for Arc<T> {
     }
 }
 
+#[cfg(feature = "serde")]
+mod serde_impls {
+    use super::{Arc, Box};
+    use serde::{Deserialize, Serialize};
+
+    impl<T: Serialize> Serialize for Arc<T> {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            (**self).serialize(serializer)
+        }
+    }
+
+    impl<'de, T> Deserialize<'de> for Arc<T>
+    where
+        T: ?Sized,
+        Box<T>: Deserialize<'de>,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            Box::deserialize(deserializer).map(Into::into)
+        }
+    }
+}
+
 #[cfg(feature = "std")]
 mod std_impls {
     // TODO: Other trait implementations that are stable but we currently don't provide:
