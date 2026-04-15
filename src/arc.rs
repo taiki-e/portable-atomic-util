@@ -2807,8 +2807,9 @@ impl<T: ?Sized + error::Error> error::Error for Arc<T> {
 
 #[cfg(feature = "serde")]
 mod serde_impls {
-    use super::{Arc, Box};
     use serde::{Deserialize, Serialize};
+
+    use super::{Arc, Box};
 
     impl<T: Serialize> Serialize for Arc<T> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
