@@ -12,6 +12,8 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+- Implement serde serialization and deserialization for `Arc`, gated behind "serde" feature.
+
 ## [0.2.6] - 2026-03-14
 
 portable-atomic-util has been extracted from the portable-atomic repository into its own repository: <https://github.com/taiki-e/portable-atomic-util>
