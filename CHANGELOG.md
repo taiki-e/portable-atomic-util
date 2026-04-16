@@ -12,7 +12,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-- Implement serde serialization and deserialization for `Arc`, gated behind "serde" feature.
+- Implement serde serialization and deserialization for `Arc`, gated behind "serde" feature. ([#2](https://github.com/taiki-e/portable-atomic-util/pull/2), thanks @tommasoclini)
 
 ## [0.2.6] - 2026-03-14
 
