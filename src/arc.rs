@@ -2806,20 +2806,37 @@ impl<T: ?Sized + error::Error> error::Error for Arc<T> {
 }
 
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 mod serde_impls {
-    use serde::{Deserialize, Serialize};
+    use serde::{
+        de::{Deserialize, Deserializer},
+        ser::{Serialize, Serializer},
+    };
 
-    use super::{Arc, Box};
+    use super::{Arc, Box, Weak};
 
-    impl<T: Serialize> Serialize for Arc<T> {
+    // Refs: https://github.com/serde-rs/serde/blob/v1.0.228/serde_core/src/ser/impls.rs#L472
+    impl<T: ?Sized + Serialize> Serialize for Arc<T> {
+        #[inline]
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
-            S: serde::Serializer,
+            S: Serializer,
         {
             (**self).serialize(serializer)
         }
     }
 
+    // Refs: https://github.com/serde-rs/serde/blob/v1.0.228/serde_core/src/ser/impls.rs#L564
+    impl<T: ?Sized + Serialize> Serialize for Weak<T> {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            self.upgrade().serialize(serializer)
+        }
+    }
+
+    // Refs: https://github.com/serde-rs/serde/blob/v1.0.228/serde_core/src/de/impls.rs#L2057
     impl<'de, T> Deserialize<'de> for Arc<T>
     where
         T: ?Sized,
@@ -2830,6 +2847,20 @@ mod serde_impls {
             D: serde::Deserializer<'de>,
         {
             Box::deserialize(deserializer).map(Into::into)
+        }
+    }
+
+    // Refs: https://github.com/serde-rs/serde/blob/v1.0.228/serde_core/src/de/impls.rs#L2035
+    impl<'de, T> Deserialize<'de> for Weak<T>
+    where
+        T: Deserialize<'de>,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            Option::<T>::deserialize(deserializer)?;
+            Ok(Weak::new())
         }
     }
 }
