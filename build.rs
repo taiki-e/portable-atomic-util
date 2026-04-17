@@ -128,7 +128,7 @@ mod version {
         // The known latest stable version. If we unable to determine
         // the rustc version, we assume this is the current version.
         // It is no problem if this is older than the actual latest stable.
-        pub(crate) const LATEST: Self = Self::stable(94);
+        pub(crate) const LATEST: Self = Self::stable(95);
 
         pub(crate) const fn stable(rustc_minor: u32) -> Self {
             Self { minor: rustc_minor, nightly: false, commit_date: Date::UNKNOWN }
