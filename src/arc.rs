@@ -1371,12 +1371,12 @@ impl<T: ?Sized + CloneToUninit> Arc<T> {
     /// let mut data = Arc::new(75);
     /// let weak = Arc::downgrade(&data);
     ///
-    /// assert!(75 == *data);
-    /// assert!(75 == *weak.upgrade().unwrap());
+    /// assert_eq!(75, *data);
+    /// assert_eq!(75, *weak.upgrade().unwrap());
     ///
     /// *Arc::make_mut(&mut data) += 1;
     ///
-    /// assert!(76 == *data);
+    /// assert_eq!(76, *data);
     /// assert!(weak.upgrade().is_none());
     /// ```
     #[inline]
@@ -2166,7 +2166,7 @@ impl<T: ?Sized + PartialEq> PartialEq for Arc<T> {
     ///
     /// let five = Arc::new(5);
     ///
-    /// assert!(five == Arc::new(5));
+    /// assert_eq!(five, Arc::new(5));
     /// ```
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -2187,7 +2187,7 @@ impl<T: ?Sized + PartialEq> PartialEq for Arc<T> {
     ///
     /// let five = Arc::new(5);
     ///
-    /// assert!(five != Arc::new(6));
+    /// assert_ne!(five, Arc::new(6));
     /// ```
     #[allow(clippy::partialeq_ne_impl)]
     #[inline]

@@ -360,22 +360,22 @@ mod alloc_tests {
         let mut cow1 = cow0.clone();
         let mut cow2 = cow1.clone();
 
-        assert!(75 == *Arc::make_mut(&mut cow0));
-        assert!(75 == *Arc::make_mut(&mut cow1));
-        assert!(75 == *Arc::make_mut(&mut cow2));
+        assert_eq!(75, *Arc::make_mut(&mut cow0));
+        assert_eq!(75, *Arc::make_mut(&mut cow1));
+        assert_eq!(75, *Arc::make_mut(&mut cow2));
 
         *Arc::make_mut(&mut cow0) += 1;
         *Arc::make_mut(&mut cow1) += 2;
         *Arc::make_mut(&mut cow2) += 3;
 
-        assert!(76 == *cow0);
-        assert!(77 == *cow1);
-        assert!(78 == *cow2);
+        assert_eq!(76, *cow0);
+        assert_eq!(77, *cow1);
+        assert_eq!(78, *cow2);
 
         // none should point to the same backing memory
-        assert!(*cow0 != *cow1);
-        assert!(*cow0 != *cow2);
-        assert!(*cow1 != *cow2);
+        assert_ne!(*cow0, *cow1);
+        assert_ne!(*cow0, *cow2);
+        assert_ne!(*cow1, *cow2);
     }
 
     #[test]
@@ -384,20 +384,20 @@ mod alloc_tests {
         let cow1 = cow0.clone();
         let cow2 = cow1.clone();
 
-        assert!(75 == *cow0);
-        assert!(75 == *cow1);
-        assert!(75 == *cow2);
+        assert_eq!(75, *cow0);
+        assert_eq!(75, *cow1);
+        assert_eq!(75, *cow2);
 
         *Arc::make_mut(&mut cow0) += 1;
-        assert!(76 == *cow0);
-        assert!(75 == *cow1);
-        assert!(75 == *cow2);
+        assert_eq!(76, *cow0);
+        assert_eq!(75, *cow1);
+        assert_eq!(75, *cow2);
 
         // cow1 and cow2 should share the same contents
         // cow0 should have a unique reference
-        assert!(*cow0 != *cow1);
-        assert!(*cow0 != *cow2);
-        assert!(*cow1 == *cow2);
+        assert_ne!(*cow0, *cow1);
+        assert_ne!(*cow0, *cow2);
+        assert_eq!(*cow1, *cow2);
     }
 
     #[test]
@@ -405,12 +405,12 @@ mod alloc_tests {
         let mut cow0 = Arc::new(75);
         let cow1_weak = Arc::downgrade(&cow0);
 
-        assert!(75 == *cow0);
-        assert!(75 == *cow1_weak.upgrade().unwrap());
+        assert_eq!(75, *cow0);
+        assert_eq!(75, *cow1_weak.upgrade().unwrap());
 
         *Arc::make_mut(&mut cow0) += 1;
 
-        assert!(76 == *cow0);
+        assert_eq!(76, *cow0);
         assert!(cow1_weak.upgrade().is_none());
     }
 
@@ -447,7 +447,7 @@ mod alloc_tests {
         let mut canary = AtomicUsize::new(0);
         let x = Arc::new(Canary(&mut canary as *mut AtomicUsize));
         drop(x);
-        assert!(canary.load(Acquire) == 1);
+        assert_eq!(canary.load(Acquire), 1);
     }
 
     #[test]
@@ -455,49 +455,49 @@ mod alloc_tests {
         let mut canary = AtomicUsize::new(0);
         let arc = Arc::new(Canary(&mut canary as *mut AtomicUsize));
         let arc_weak = Arc::downgrade(&arc);
-        assert!(canary.load(Acquire) == 0);
+        assert_eq!(canary.load(Acquire), 0);
         drop(arc);
-        assert!(canary.load(Acquire) == 1);
+        assert_eq!(canary.load(Acquire), 1);
         drop(arc_weak);
     }
 
     #[test]
     fn test_strong_count() {
         let a = Arc::new(0);
-        assert!(Arc::strong_count(&a) == 1);
+        assert_eq!(Arc::strong_count(&a), 1);
         let w = Arc::downgrade(&a);
-        assert!(Arc::strong_count(&a) == 1);
+        assert_eq!(Arc::strong_count(&a), 1);
         let b = w.upgrade().expect("");
-        assert!(Arc::strong_count(&b) == 2);
-        assert!(Arc::strong_count(&a) == 2);
+        assert_eq!(Arc::strong_count(&b), 2);
+        assert_eq!(Arc::strong_count(&a), 2);
         drop(w);
         drop(a);
-        assert!(Arc::strong_count(&b) == 1);
+        assert_eq!(Arc::strong_count(&b), 1);
         let c = b.clone();
-        assert!(Arc::strong_count(&b) == 2);
-        assert!(Arc::strong_count(&c) == 2);
+        assert_eq!(Arc::strong_count(&b), 2);
+        assert_eq!(Arc::strong_count(&c), 2);
     }
 
     #[test]
     fn test_weak_count() {
         let a = Arc::new(0);
-        assert!(Arc::strong_count(&a) == 1);
-        assert!(Arc::weak_count(&a) == 0);
+        assert_eq!(Arc::strong_count(&a), 1);
+        assert_eq!(Arc::weak_count(&a), 0);
         let w = Arc::downgrade(&a);
-        assert!(Arc::strong_count(&a) == 1);
-        assert!(Arc::weak_count(&a) == 1);
+        assert_eq!(Arc::strong_count(&a), 1);
+        assert_eq!(Arc::weak_count(&a), 1);
         let x = w.clone();
-        assert!(Arc::weak_count(&a) == 2);
+        assert_eq!(Arc::weak_count(&a), 2);
         drop(w);
         drop(x);
-        assert!(Arc::strong_count(&a) == 1);
-        assert!(Arc::weak_count(&a) == 0);
+        assert_eq!(Arc::strong_count(&a), 1);
+        assert_eq!(Arc::weak_count(&a), 0);
         let c = a.clone();
-        assert!(Arc::strong_count(&a) == 2);
-        assert!(Arc::weak_count(&a) == 0);
+        assert_eq!(Arc::strong_count(&a), 2);
+        assert_eq!(Arc::weak_count(&a), 0);
         let d = Arc::downgrade(&c);
-        assert!(Arc::weak_count(&c) == 1);
-        assert!(Arc::strong_count(&c) == 2);
+        assert_eq!(Arc::weak_count(&c), 1);
+        assert_eq!(Arc::strong_count(&c), 2);
 
         drop(a);
         drop(c);
@@ -550,7 +550,7 @@ mod alloc_tests {
     fn test_from_owned() {
         let foo = 123;
         let foo_arc = Arc::from(foo);
-        assert!(123 == *foo_arc);
+        assert_eq!(123, *foo_arc);
     }
 
     #[test]
