@@ -32,22 +32,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  miri:
-    uses: taiki-e/github-actions/.github/workflows/miri.yml@931686d4e4cf88b13e790040727ccde2dba8ec62 # main
-  msrv:
-    uses: taiki-e/github-actions/.github/workflows/msrv.yml@931686d4e4cf88b13e790040727ccde2dba8ec62 # main
+  tidy:
+    uses: taiki-e/github-actions/.github/workflows/tidy.yml@1bb80ca038216cd1fb7b6ca6d76240b3772963ab # main
+    permissions:
+      security-events: write # for github/codeql-action/*
   test:
-    uses: taiki-e/github-actions/.github/workflows/test.yml@931686d4e4cf88b13e790040727ccde2dba8ec62 # main
+    needs: tidy
+    uses: taiki-e/github-actions/.github/workflows/rust-test.yml@1bb80ca038216cd1fb7b6ca6d76240b3772963ab # main
     with:
       target: x86_64-unknown-linux-gnu,aarch64-apple-darwin,x86_64-pc-windows-msvc,aarch64-unknown-linux-gnu,armv5te-unknown-linux-gnueabi,i686-unknown-linux-gnu,s390x-unknown-linux-gnu
       test-fat-lto: true
       no-std: false # covered by tools/build.sh
-  tidy:
-    uses: taiki-e/github-actions/.github/workflows/tidy.yml@931686d4e4cf88b13e790040727ccde2dba8ec62 # main
-    permissions:
-      security-events: write # for github/codeql-action/*
 
   build:
+    needs: tidy
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +57,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: taiki-e/checkout-action@7d1e50e93dc4fb3bba58f85018fadf77898aee8b # v1.4.2
-      - uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2.77.0
+      - uses: taiki-e/install-action@c070f87102a1c75b3183910f391c1cb887fe13c8 # v2.77.6
         with:
           tool: rust@${{ matrix.rust }},cargo-hack
           fallback: none
@@ -68,6 +66,7 @@ jobs:
           ALL_TARGETS_MUST_BE_AVAILABLE: ${{ matrix.rust == 'nightly' || '' }}
 
   san:
+    needs: tidy
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +92,7 @@ jobs:
       - run: |
           printf 'TARGET=x86_64-unknown-linux-gnutsan\n' >>"${GITHUB_ENV}"
         if: matrix.sanitizer == 'thread'
-      - uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2.77.0
+      - uses: taiki-e/install-action@c070f87102a1c75b3183910f391c1cb887fe13c8 # v2.77.6
         with:
           tool: rust@nightly+${{ env.TARGET }}${{ matrix.sanitizer == 'memory' && '+rust-src' || '' }}
           fallback: none
@@ -105,15 +104,16 @@ jobs:
           CARGO_PROFILE_RELEASE_LTO: fat
 
   valgrind:
+    needs: tidy
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: taiki-e/checkout-action@7d1e50e93dc4fb3bba58f85018fadf77898aee8b # v1.4.2
-      - uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2.77.0
+      - uses: taiki-e/install-action@c070f87102a1c75b3183910f391c1cb887fe13c8 # v2.77.6
         with:
           tool: rust@nightly
           fallback: none
-      - uses: taiki-e/setup-cross-toolchain-action@129361238c06ff2cc1c4ca5c5d2217af441ffdf6 # v1.40.1
+      - uses: taiki-e/setup-cross-toolchain-action@3d9770ce98eb7dbcf378563182a5e8031165f75b # v1.41.0
         with:
           target: host-tuple
           runner: valgrind
