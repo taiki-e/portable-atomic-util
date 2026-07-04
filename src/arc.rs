@@ -187,7 +187,7 @@ impl<T: ?Sized> Arc<T> {
 pub struct Weak<T: ?Sized> {
     // This is a `NonNull` to allow optimizing the size of this type in enums,
     // but it is not necessarily a valid pointer.
-    // `Weak::new` sets this to `usize::MAX` so that it doesn’t need
+    // `Weak::new` sets this to `usize::MAX` so that it doesn't need
     // to allocate space on the heap. That's not a value a real pointer
     // will ever have because ArcInner has alignment at least 2.
     ptr: NonNull<ArcInner<T>>,
@@ -564,7 +564,7 @@ impl<T> Arc<T> {
     /// ```
     #[inline]
     pub fn into_inner(this: Self) -> Option<T> {
-        // Make sure that the ordinary `Drop` implementation isn’t called as well
+        // Make sure that the ordinary `Drop` implementation isn't called as well
         let mut this = mem::ManuallyDrop::new(this);
 
         // Following the implementation of `drop` and `drop_slow`
