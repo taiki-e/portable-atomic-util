@@ -1083,7 +1083,7 @@ impl<T: ?Sized> Arc<T> {
         // Destroy the data at this time, even though we must not free the box
         // allocation itself (there might still be weak pointers lying around).
         // We cannot use `get_mut_unchecked` here, because `self.alloc` is borrowed.
-        unsafe { ptr::drop_in_place(&mut (*self.ptr.as_ptr()).data) };
+        unsafe { ptr::drop_in_place(&mut (*self.ptr.as_ptr()).data) }
     }
 
     /// Returns `true` if the two `Arc`s point to the same allocation in a vein similar to
