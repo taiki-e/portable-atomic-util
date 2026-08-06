@@ -30,14 +30,14 @@ use core::{
     cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
-    isize,
     marker::PhantomData,
     mem::{self, ManuallyDrop},
     ops::Deref,
     pin::Pin,
     ptr::{self, NonNull},
-    usize,
 };
+#[allow(deprecated)]
+use core::{isize, usize};
 #[cfg(not(portable_atomic_no_maybe_uninit))]
 use core::{iter::FromIterator, slice};
 #[cfg(portable_atomic_unstable_coerce_unsized)]
@@ -53,6 +53,11 @@ use crate::utils::ptr as strict;
 #[cfg(portable_atomic_no_strict_provenance)]
 use crate::utils::ptr::PtrExt as _;
 
+#[allow(deprecated)] // associated constant MAX requires Rust 1.43
+const ISIZE_MAX: isize = isize::MAX;
+#[allow(deprecated)] // associated constant MAX requires Rust 1.43
+const USIZE_MAX: usize = usize::MAX;
+
 /// A soft limit on the amount of references that may be made to an `Arc`.
 ///
 /// Going above this limit will abort your program (although not
@@ -62,7 +67,7 @@ use crate::utils::ptr::PtrExt as _;
 /// This is a global invariant, and also applies when using a compare-exchange loop.
 ///
 /// See comment in `Arc::clone`.
-const MAX_REFCOUNT: usize = isize::MAX as usize;
+const MAX_REFCOUNT: usize = ISIZE_MAX as usize;
 
 /// The error in case either counter reaches above `MAX_REFCOUNT`, and we can `panic` safely.
 const INTERNAL_OVERFLOW_ERROR: &str = "Arc counter overflow";
@@ -978,7 +983,7 @@ impl<T: ?Sized> Arc<T> {
 
         loop {
             // check if the weak counter is currently "locked"; if so, spin.
-            if cur == usize::MAX {
+            if cur == USIZE_MAX {
                 hint::spin_loop();
                 cur = this.inner().weak.load(Relaxed);
                 continue;
@@ -1031,7 +1036,7 @@ impl<T: ?Sized> Arc<T> {
         let cnt = this.inner().weak.load(Relaxed);
         // If the weak count is currently locked, the value of the
         // count was 0 just before taking the lock.
-        if cnt == usize::MAX { 0 } else { cnt - 1 }
+        if cnt == USIZE_MAX { 0 } else { cnt - 1 }
     }
 
     /// Gets the number of strong (`Arc`) pointers to this allocation.
@@ -1533,7 +1538,7 @@ impl<T: ?Sized> Arc<T> {
         // writes to `strong` (in particular in `Weak::upgrade`) prior to decrements
         // of the `weak` count (via `Weak::drop`, which uses release). If the upgraded
         // weak ref was never dropped, the CAS here will fail so we do not care to synchronize.
-        if this.inner().weak.compare_exchange(1, usize::MAX, Acquire, Relaxed).is_ok() {
+        if this.inner().weak.compare_exchange(1, USIZE_MAX, Acquire, Relaxed).is_ok() {
             // This needs to be an `Acquire` to synchronize with the decrement of the `strong`
             // counter in `drop` -- the only access that happens when any but the last reference
             // is being dropped.
@@ -1679,7 +1684,7 @@ impl<T> Weak<T> {
     pub const fn new() -> Self {
         Self {
             ptr: unsafe {
-                NonNull::new_unchecked(strict::without_provenance_mut::<ArcInner<T>>(usize::MAX))
+                NonNull::new_unchecked(strict::without_provenance_mut::<ArcInner<T>>(USIZE_MAX))
             },
         }
     }
@@ -3258,9 +3263,11 @@ mod clone {
 }
 
 mod layout {
+    use core::{alloc::Layout, cmp};
+
     #[cfg(not(portable_atomic_no_maybe_uninit))]
-    use core::isize;
-    use core::{alloc::Layout, cmp, usize};
+    use super::ISIZE_MAX;
+    use super::USIZE_MAX;
 
     // Based on unstable Layout::padding_needed_for.
     #[inline]
@@ -3268,7 +3275,7 @@ mod layout {
     pub(super) fn padding_needed_for(layout: Layout, align: usize) -> usize {
         // FIXME: Can we just change the type on this to `Alignment`?
         if !align.is_power_of_two() {
-            return usize::MAX;
+            return USIZE_MAX;
         }
         let len_rounded_up = size_rounded_up_to_custom_align(layout, align);
         // SAFETY: Cannot overflow because the rounded-up value is never less
@@ -3355,7 +3362,7 @@ mod layout {
 
             // SAFETY: the maximum possible alignment is `isize::MAX + 1`,
             // so the subtraction cannot overflow.
-            (isize::MAX as usize + 1).wrapping_sub(align)
+            (ISIZE_MAX as usize + 1).wrapping_sub(align)
         }
 
         #[inline]
@@ -3407,7 +3414,7 @@ fn abort() -> ! {
 }
 
 fn is_dangling<T: ?Sized>(ptr: *const T) -> bool {
-    (ptr as *const ()).addr() == usize::MAX
+    (ptr as *const ()).addr() == USIZE_MAX
 }
 
 // Based on unstable alloc::alloc::Global.
