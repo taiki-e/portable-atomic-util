@@ -12,6 +12,8 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+- Increase the minimum supported Rust version from Rust 1.34 to Rust 1.36. Using the `alloc` feature without the `std` feature already required Rust 1.36, so this does not change anything for such no-std use cases.
+
 ## [0.2.7] - 2026-04-16
 
 - Implement serde serialization and deserialization for `Arc`, gated behind "serde" feature. ([#2](https://github.com/taiki-e/portable-atomic-util/pull/2), thanks @tommasoclini)

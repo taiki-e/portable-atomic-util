@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/portable-atomic-util?style=flat-square&logo=rust)](https://crates.io/crates/portable-atomic-util)
 [![docs.rs](https://img.shields.io/badge/docs.rs-portable--atomic--util-blue?style=flat-square&logo=docs.rs)](https://docs.rs/portable-atomic-util)
 [![license](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue?style=flat-square)](#license)
-[![msrv](https://img.shields.io/badge/msrv-1.34-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
+[![msrv](https://img.shields.io/badge/msrv-1.36-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![github actions](https://img.shields.io/github/actions/workflow/status/taiki-e/portable-atomic-util/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/taiki-e/portable-atomic-util/actions)
 
 <!-- tidy:sync-markdown-to-rustdoc:start:src/lib.rs -->
@@ -28,9 +28,6 @@ This crate was originally [part of the portable-atomic repository](https://githu
 
 - **`alloc`**<br>
   Use `alloc`.
-
-  Note:
-  - The MSRV when this feature is enabled and the `std` feature is *not* enabled is Rust 1.36 that `alloc` crate stabilized.
 
 - **`serde`**<br>
   Implement `serde::{Serialize, Deserialize}` for `Arc`.

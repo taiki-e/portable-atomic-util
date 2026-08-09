@@ -29,7 +29,7 @@ fn main() {
         // Custom cfgs set by build script. Not public API.
         // grep -F 'cargo:rustc-cfg=' portable-atomic-util/build.rs | grep -Ev '^ *//' | sed -E 's/^.*cargo:rustc-cfg=//; s/(=\\)?".*$//' | LC_ALL=C sort -u | tr '\n' ',' | sed -E 's/,$/\n/'
         println!(
-            "cargo:rustc-check-cfg=cfg(portable_atomic_no_alloc,portable_atomic_no_core_unwind_safe,portable_atomic_no_error_in_core,portable_atomic_no_futures_api,portable_atomic_no_io_safety,portable_atomic_no_io_vec,portable_atomic_no_maybe_uninit,portable_atomic_no_min_const_generics,portable_atomic_no_strict_provenance,portable_atomic_no_track_caller,portable_atomic_no_unsafe_op_in_unsafe_fn,portable_atomic_sanitize_thread)"
+            "cargo:rustc-check-cfg=cfg(portable_atomic_no_core_unwind_safe,portable_atomic_no_error_in_core,portable_atomic_no_io_safety,portable_atomic_no_min_const_generics,portable_atomic_no_strict_provenance,portable_atomic_no_track_caller,portable_atomic_no_unsafe_op_in_unsafe_fn,portable_atomic_sanitize_thread)"
         );
     }
 
@@ -37,22 +37,6 @@ fn main() {
     // stable rustc is used when the build script doesn't run. This is useful
     // for non-cargo build systems that don't run the build script.
 
-    // alloc stabilized in Rust 1.36 (nightly-2019-04-15) https://github.com/rust-lang/rust/pull/59675
-    if !version.probe(36, 2019, 4, 14) {
-        println!("cargo:rustc-cfg=portable_atomic_no_alloc");
-    }
-    // std::{future,task} stabilized in Rust 1.36 (nightly-2019-04-25) https://github.com/rust-lang/rust/pull/59739
-    if !version.probe(36, 2019, 4, 24) {
-        println!("cargo:rustc-cfg=portable_atomic_no_futures_api");
-    }
-    // {read,write}_vectored stabilized in Rust 1.36 (nightly-2019-04-30) https://github.com/rust-lang/rust/pull/60334
-    if !version.probe(36, 2019, 4, 29) {
-        println!("cargo:rustc-cfg=portable_atomic_no_io_vec");
-    }
-    // MaybeUninit stabilized in Rust 1.36 (nightly-2019-05-21) https://github.com/rust-lang/rust/pull/60445
-    if !version.probe(36, 2019, 5, 20) {
-        println!("cargo:rustc-cfg=portable_atomic_no_maybe_uninit");
-    }
     // track_caller stabilized in Rust 1.46 (nightly-2020-07-02): https://github.com/rust-lang/rust/pull/72445
     if !version.probe(46, 2020, 7, 1) {
         println!("cargo:rustc-cfg=portable_atomic_no_track_caller");

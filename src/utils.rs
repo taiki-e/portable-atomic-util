@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#![cfg_attr(
-    not(any(all(feature = "alloc", not(portable_atomic_no_alloc)), feature = "std")),
-    allow(dead_code, unused_macros, unused_imports)
-)]
+#![cfg_attr(not(feature = "alloc"), allow(dead_code, unused_macros, unused_imports))]
 
 // rustfmt-compatible cfg_select/cfg_if alternative
 // Note: This macro is cfg_sel!({ }), not cfg_sel! { }.
