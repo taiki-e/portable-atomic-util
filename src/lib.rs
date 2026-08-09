@@ -26,9 +26,6 @@ This crate was originally [part of the portable-atomic repository](https://githu
 - **`alloc`**<br>
   Use `alloc`.
 
-  Note:
-  - The MSRV when this feature is enabled and the `std` feature is *not* enabled is Rust 1.36 that `alloc` crate stabilized.
-
 - **`serde`**<br>
   Implement `serde::{Serialize, Deserialize}` for `Arc`.
 
@@ -114,23 +111,20 @@ RUSTFLAGS="--cfg portable_atomic_unstable_coerce_unsized" cargo ...
 // Enable custom unsized coercions if the user explicitly opts-in to unstable cfg
 #![cfg_attr(portable_atomic_unstable_coerce_unsized, feature(coerce_unsized, unsize))]
 
-#[cfg(all(feature = "alloc", not(portable_atomic_no_alloc)))]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
-#[cfg(all(feature = "std", portable_atomic_no_alloc))]
-extern crate std as alloc;
 
 #[macro_use]
 mod utils;
 
-#[cfg(any(all(feature = "alloc", not(portable_atomic_no_alloc)), feature = "std"))]
+#[cfg(feature = "alloc")]
 mod arc;
-#[cfg(any(all(feature = "alloc", not(portable_atomic_no_alloc)), feature = "std"))]
+#[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "alloc", feature = "std"))))]
 pub use self::arc::{Arc, Weak};
 
-#[cfg(not(portable_atomic_no_futures_api))]
-#[cfg(any(all(feature = "alloc", not(portable_atomic_no_alloc)), feature = "std"))]
+#[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "alloc", feature = "std"))))]
 pub mod task;

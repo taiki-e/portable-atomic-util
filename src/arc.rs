@@ -18,9 +18,9 @@ use alloc::{
     alloc::handle_alloc_error,
     borrow::{Cow, ToOwned},
     boxed::Box,
+    string::String,
+    vec::Vec,
 };
-#[cfg(not(portable_atomic_no_maybe_uninit))]
-use alloc::{string::String, vec::Vec};
 #[cfg(not(portable_atomic_no_min_const_generics))]
 use core::convert::TryFrom;
 use core::{
@@ -30,16 +30,16 @@ use core::{
     cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
+    iter::FromIterator,
     marker::PhantomData,
     mem::{self, ManuallyDrop},
     ops::Deref,
     pin::Pin,
     ptr::{self, NonNull},
+    slice,
 };
 #[allow(deprecated)]
 use core::{isize, usize};
-#[cfg(not(portable_atomic_no_maybe_uninit))]
-use core::{iter::FromIterator, slice};
 #[cfg(portable_atomic_unstable_coerce_unsized)]
 use core::{marker::Unsize, ops::CoerceUnsized};
 
@@ -372,7 +372,6 @@ impl<T> Arc<T> {
     ///
     /// assert_eq!(*five, 5)
     /// ```
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     #[inline]
     #[must_use]
     pub fn new_uninit() -> Arc<mem::MaybeUninit<T>> {
@@ -403,7 +402,6 @@ impl<T> Arc<T> {
     /// ```
     ///
     /// [zeroed]: mem::MaybeUninit::zeroed
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     #[inline]
     #[must_use]
     pub fn new_zeroed() -> Arc<mem::MaybeUninit<T>> {
@@ -594,7 +592,6 @@ impl<T> Arc<T> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> Arc<[T]> {
     /// Constructs a new atomically reference-counted slice with uninitialized contents.
     ///
@@ -669,7 +666,6 @@ impl<T> Arc<[T]> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> Arc<mem::MaybeUninit<T>> {
     /// Converts to `Arc<T>`.
     ///
@@ -722,7 +718,6 @@ impl<T: ?Sized + CloneToUninit> Arc<T> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> Arc<[mem::MaybeUninit<T>]> {
     /// Converts to `Arc<[T]>`.
     ///
@@ -1193,7 +1188,6 @@ impl<T: ?Sized> Arc<T> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> Arc<[T]> {
     /// Allocates an `ArcInner<[mem::MaybeUninit<T>]>` with the given length.
     unsafe fn allocate_for_slice(len: usize) -> *mut ArcInner<[mem::MaybeUninit<T>]> {
@@ -2449,7 +2443,6 @@ items!({
     }
 });
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T: Clone> From<&[T]> for Arc<[T]> {
     /// Allocates a reference-counted slice and fills it by cloning `v`'s items.
     ///
@@ -2467,7 +2460,6 @@ impl<T: Clone> From<&[T]> for Arc<[T]> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T: Clone> From<&mut [T]> for Arc<[T]> {
     /// Allocates a reference-counted slice and fills it by cloning `v`'s items.
     ///
@@ -2486,7 +2478,6 @@ impl<T: Clone> From<&mut [T]> for Arc<[T]> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl From<&str> for Arc<str> {
     /// Allocates a reference-counted `str` and copies `v` into it.
     ///
@@ -2506,7 +2497,6 @@ impl From<&str> for Arc<str> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl From<&mut str> for Arc<str> {
     /// Allocates a reference-counted `str` and copies `v` into it.
     ///
@@ -2525,7 +2515,6 @@ impl From<&mut str> for Arc<str> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl From<String> for Arc<str> {
     /// Allocates a reference-counted `str` and copies `v` into it.
     ///
@@ -2560,7 +2549,6 @@ impl<T: ?Sized> From<Box<T>> for Arc<T> {
     }
 }
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> From<Vec<T>> for Arc<[T]> {
     /// Allocates a reference-counted slice and moves `v`'s items into it.
     ///
@@ -2655,7 +2643,6 @@ items!({
     }
 });
 
-#[cfg(not(portable_atomic_no_maybe_uninit))]
 impl<T> FromIterator<T> for Arc<[T]> {
     /// Takes each element in the `Iterator` and collects it into an `Arc<[T]>`.
     ///
@@ -3017,7 +3004,6 @@ mod std_impls {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             (&**self).read(buf)
         }
-        #[cfg(not(portable_atomic_no_io_vec))]
         fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
             (&**self).read_vectored(bufs)
         }
@@ -3039,7 +3025,6 @@ mod std_impls {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             (&**self).write(buf)
         }
-        #[cfg(not(portable_atomic_no_io_vec))]
         fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
             (&**self).write_vectored(bufs)
         }
@@ -3065,7 +3050,6 @@ mod std_impls {
     //     // fn read_buf(&mut self, buf: io::BorrowedCursor<'_>) -> io::Result<()> {
     //     //     (&**self).read_buf(buf)
     //     // }
-    //     #[cfg(not(portable_atomic_no_io_vec))]
     //     fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
     //         (&**self).read_vectored(bufs)
     //     }
@@ -3078,7 +3062,6 @@ mod std_impls {
     //     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
     //         (&**self).write(buf)
     //     }
-    //     #[cfg(not(portable_atomic_no_io_vec))]
     //     fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
     //         (&**self).write_vectored(bufs)
     //     }
@@ -3099,7 +3082,6 @@ mod std_impls {
     //     // fn read_buf(&mut self, buf: io::BorrowedCursor<'_>) -> io::Result<()> {
     //     //     (&**self).read_buf(buf)
     //     // }
-    //     #[cfg(not(portable_atomic_no_io_vec))]
     //     fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
     //         (&**self).read_vectored(bufs)
     //     }
@@ -3113,7 +3095,6 @@ mod std_impls {
     //     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
     //         (&**self).write(buf)
     //     }
-    //     #[cfg(not(portable_atomic_no_io_vec))]
     //     fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
     //         (&**self).write_vectored(bufs)
     //     }
@@ -3130,14 +3111,11 @@ mod std_impls {
 
 use self::clone::CloneToUninit;
 mod clone {
-    use core::ptr;
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     use core::{
         mem::{self, MaybeUninit},
-        slice,
+        ptr, slice,
     };
 
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     use super::strict;
 
     // Based on unstable core::clone::CloneToUninit.
@@ -3154,7 +3132,6 @@ mod clone {
             unsafe { clone_one(self, dest as *mut T) }
         }
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     unsafe impl<T: Clone> CloneToUninit for [T] {
         #[inline]
         #[cfg_attr(all(debug_assertions, not(portable_atomic_no_track_caller)), track_caller)]
@@ -3164,7 +3141,6 @@ mod clone {
             unsafe { clone_slice(self, dest) }
         }
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     unsafe impl CloneToUninit for str {
         #[inline]
         #[cfg_attr(all(debug_assertions, not(portable_atomic_no_track_caller)), track_caller)]
@@ -3185,7 +3161,6 @@ mod clone {
             ptr::write(dst, src.clone());
         }
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     #[inline]
     #[cfg_attr(all(debug_assertions, not(portable_atomic_no_track_caller)), track_caller)]
     unsafe fn clone_slice<T: Clone>(src: &[T], dst: *mut [T]) {
@@ -3221,13 +3196,11 @@ mod clone {
     /// initialized, unless disarmed by forgetting.
     ///
     /// This is a helper for `impl<T: Clone> CloneToUninit for [T]`.
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     struct InitializingSlice<'a, T> {
         data: &'a mut [MaybeUninit<T>],
         /// Number of elements of `*self.data` that are initialized.
         initialized_len: usize,
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     impl<'a, T> InitializingSlice<'a, T> {
         #[inline]
         fn from_fully_uninit(data: &'a mut [MaybeUninit<T>]) -> Self {
@@ -3244,7 +3217,6 @@ mod clone {
             self.initialized_len += 1;
         }
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     impl<T> Drop for InitializingSlice<'_, T> {
         #[cold] // will only be invoked on unwind
         fn drop(&mut self) {
@@ -3265,9 +3237,7 @@ mod clone {
 mod layout {
     use core::{alloc::Layout, cmp};
 
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
-    use super::ISIZE_MAX;
-    use super::USIZE_MAX;
+    use super::{ISIZE_MAX, USIZE_MAX};
 
     // Based on unstable Layout::padding_needed_for.
     #[inline]
@@ -3340,7 +3310,6 @@ mod layout {
     }
 
     // Based on Layout::array stabilized in Rust 1.44.
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     #[inline]
     pub(super) fn array<T>(n: usize) -> Option<Layout> {
         #[inline(always)]
@@ -3453,7 +3422,6 @@ impl Global {
     fn allocate(self, layout: Layout) -> Option<NonNull<u8>> {
         self.alloc_impl(layout, false)
     }
-    #[cfg(not(portable_atomic_no_maybe_uninit))]
     #[inline]
     #[cfg_attr(miri, track_caller)] // even without panics, this helps for Miri backtraces
     fn allocate_zeroed(self, layout: Layout) -> Option<NonNull<u8>> {
