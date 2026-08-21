@@ -8,7 +8,6 @@ use self::version::{Version, rustc_version};
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=version.rs");
 
     let target = &*env::var("TARGET").expect("TARGET not set");
 
