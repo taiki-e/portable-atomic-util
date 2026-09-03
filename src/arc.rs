@@ -1484,9 +1484,10 @@ impl<T: ?Sized> Arc<T> {
     /// Returns [`None`] otherwise, because it is not safe to
     /// mutate a shared value.
     ///
-    /// See also [`make_mut`][make_mut], which will [`clone`][clone]
-    /// the inner value when there are other `Arc` pointers.
+    /// See also [`get_mut_unchecked`][get_mut_unchecked] and [`make_mut`][make_mut],
+    /// which will [`clone`][clone] the inner value when there are other `Arc` pointers.
     ///
+    /// [get_mut_unchecked]: Arc::get_mut_unchecked
     /// [make_mut]: Arc::make_mut
     /// [clone]: Clone::clone
     ///
@@ -1516,8 +1517,46 @@ impl<T: ?Sized> Arc<T> {
         }
     }
 
+    /// Returns a mutable reference into the given `Arc`, without checking if it
+    /// is safe to do so.
+    ///
+    /// See also [`get_mut`][get_mut], which allows safe access to the inner value if there
+    /// are no other `Arc` or [`Weak`] pointers, or [`make_mut`][make_mut], which will
+    /// [`clone`][clone] the inner value when there are other `Arc` pointers.
+    ///
+    /// [get_mut]: Arc::get_mut
+    /// [make_mut]: Arc::make_mut
+    /// [clone]: Clone::clone
+    ///
+    /// # Safety
+    ///
+    /// Any other `Arc` or [`Weak`] pointers to the same allocation must not be accessed
+    /// for the duration of the returned borrow, even read-only. Accessing the value
+    /// through any other pointer is undefined behavior.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use portable_atomic_util::Arc;
+    ///
+    /// let mut x = Arc::new(3);
+    /// // SAFETY: There are no other pointers to `x`.
+    /// unsafe {
+    ///     *Arc::get_mut_unchecked(&mut x) = 4;
+    /// }
+    /// assert_eq!(*x, 4);
+    ///
+    /// let y = Arc::clone(&x);
+    /// // SAFETY: We promise not to access `y` while `x` is borrowed.
+    /// unsafe {
+    ///     *Arc::get_mut_unchecked(&mut x) = 5;
+    /// }
+    ///
+    /// // Any access to `y` before the borrow of `x` ends would be undefined behavior.
+    /// assert_eq!(*y, 5);
+    /// ```
     #[inline]
-    unsafe fn get_mut_unchecked(this: &mut Self) -> &mut T {
+    pub unsafe fn get_mut_unchecked(this: &mut Self) -> &mut T {
         // We are careful to *not* create a reference covering the "count" fields, as
         // this would alias with concurrent access to the reference counts (e.g. by `Weak`).
         unsafe { &mut (*this.ptr.as_ptr()).data }

@@ -197,6 +197,23 @@ mod alloc_tests {
     }
 
     #[test]
+    fn arc_get_mut_unchecked() {
+        let mut x = Arc::new(3);
+        // SAFETY: There are no other pointers to `x`.
+        unsafe {
+            *Arc::get_mut_unchecked(&mut x) = 4;
+        }
+        assert_eq!(*x, 4);
+
+        let y = Arc::clone(&x);
+        // SAFETY: We promise not to access `y` while `x` is borrowed.
+        unsafe {
+            *Arc::get_mut_unchecked(&mut x) = 5;
+        }
+        assert_eq!(*y, 5);
+    }
+
+    #[test]
     fn weak_counts() {
         assert_eq!(Weak::weak_count(&Weak::<u64>::new()), 0);
         assert_eq!(Weak::strong_count(&Weak::<u64>::new()), 0);
