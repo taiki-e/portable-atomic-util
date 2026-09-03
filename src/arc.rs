@@ -590,6 +590,46 @@ impl<T> Arc<T> {
 
         Some(inner)
     }
+
+    /// Maps the value in an `Arc`, reusing the allocation if possible.
+    ///
+    /// `f` is called on a reference to the value in the `Arc`, and the result is returned, also in
+    /// an `Arc`.
+    ///
+    /// Note: this is an associated function, which means that you have
+    /// to call it as `Arc::map(a, f)` instead of `r.map(a)`. This
+    /// is so that there is no conflict with a method on the inner type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use portable_atomic_util::Arc;
+    ///
+    /// let r = Arc::new(7);
+    /// let new = Arc::map(r, |i| i + 7);
+    /// assert_eq!(*new, 14);
+    /// ```
+    #[inline]
+    pub fn map<F, U>(this: Self, f: F) -> Arc<U>
+    where
+        F: FnOnce(&T) -> U,
+    {
+        if mem::size_of::<T>() == mem::size_of::<U>()
+            && mem::align_of::<T>() == mem::align_of::<U>()
+            && Arc::is_unique(&this)
+        {
+            unsafe {
+                let ptr = Arc::into_raw(this);
+                let value = ptr.read();
+                let mut allocation = Arc::from_raw(ptr as *const mem::MaybeUninit<U>);
+
+                *Arc::get_mut_unchecked(&mut allocation) = mem::MaybeUninit::new(f(&value));
+                allocation.assume_init()
+            }
+        } else {
+            Arc::new(f(&*this))
+        }
+    }
 }
 
 impl<T> Arc<[T]> {
